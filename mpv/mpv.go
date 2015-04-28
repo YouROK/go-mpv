@@ -32,8 +32,8 @@ func (m *Mpv) ClientName() string {
 	return C.GoString(C.mpv_client_name(m.handle))
 }
 
-func (m *Mpv) Initialize() int {
-	return int(C.mpv_initialize(m.handle))
+func (m *Mpv) Initialize() error {
+	return NewError(C.mpv_initialize(m.handle))
 }
 
 func (m *Mpv) DetachDestroy() {
@@ -54,10 +54,10 @@ func (m *Mpv) CreateClient(name string) *Mpv {
 	return nil
 }
 
-func (m *Mpv) LoadConfigFile(fileName string) int {
+func (m *Mpv) LoadConfigFile(fileName string) error {
 	cfn := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfn))
-	return int(C.mpv_load_config_file(m.handle, cfn))
+	return NewError(C.mpv_load_config_file(m.handle, cfn))
 }
 
 func (m *Mpv) Suspend() {
@@ -76,18 +76,18 @@ func (m *Mpv) SetOption(name string, format Format, data interface{}) error {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	ptr := data2Ptr(format, data)
-	return NewMpvError(C.mpv_set_option(m.handle, cname, C.mpv_format(format), ptr))
+	return NewError(C.mpv_set_option(m.handle, cname, C.mpv_format(format), ptr))
 }
 
-func (m *Mpv) SetOptionString(name, data string) int {
+func (m *Mpv) SetOptionString(name, data string) error {
 	cname := C.CString(name)
 	cdata := C.CString(data)
 	defer C.free(unsafe.Pointer(cname))
 	defer C.free(unsafe.Pointer(cdata))
-	return int(C.mpv_set_option_string(m.handle, cname, cdata))
+	return NewError(C.mpv_set_option_string(m.handle, cname, cdata))
 }
 
-func (m *Mpv) Command(command []string) int {
+func (m *Mpv) Command(command []string) error {
 	cArray := C.makeCharArray1(C.int(len(command) + 1))
 	if cArray == nil {
 		panic("got NULL from calloc")
@@ -100,8 +100,7 @@ func (m *Mpv) Command(command []string) int {
 		defer C.free(unsafe.Pointer(cStr))
 	}
 
-	return int(C.mpv_command(m.handle, cArray))
-	return -1
+	return NewError(C.mpv_command(m.handle, cArray))
 }
 
 func (m *Mpv) CommandNode(command []string) int {
@@ -111,13 +110,13 @@ func (m *Mpv) CommandNode(command []string) int {
 	return -1
 }
 
-func (m *Mpv) CommandString(command string) int {
+func (m *Mpv) CommandString(command string) error {
 	ccmd := C.CString(command)
 	defer C.free(unsafe.Pointer(ccmd))
-	return int(C.mpv_command_string(m.handle, ccmd))
+	return NewError(C.mpv_command_string(m.handle, ccmd))
 }
 
-func (m *Mpv) CommandAsync(replyUserdata uint64, command []string) int {
+func (m *Mpv) CommandAsync(replyUserdata uint64, command []string) error {
 	cArray := C.makeCharArray1(C.int(len(command) + 1))
 	if cArray == nil {
 		panic("got NULL from calloc")
@@ -130,7 +129,7 @@ func (m *Mpv) CommandAsync(replyUserdata uint64, command []string) int {
 		defer C.free(unsafe.Pointer(cStr))
 	}
 
-	return int(C.mpv_command_async(m.handle, C.uint64_t(replyUserdata), cArray))
+	return NewError(C.mpv_command_async(m.handle, C.uint64_t(replyUserdata), cArray))
 }
 
 func (m *Mpv) CommandNodeAsync(command []string) int {
@@ -144,81 +143,148 @@ func (m *Mpv) SetProperty(name string, format Format, data interface{}) error {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	ptr := data2Ptr(format, data)
-	return NewMpvError(C.mpv_set_property(m.handle, cname, C.mpv_format(format), ptr))
+	return NewError(C.mpv_set_property(m.handle, cname, C.mpv_format(format), ptr))
 }
 
-func (m *Mpv) SetPropertyString(name, data string) int {
+func (m *Mpv) SetPropertyString(name, data string) error {
 	cname := C.CString(name)
 	cdata := C.CString(data)
 	defer C.free(unsafe.Pointer(cname))
 	defer C.free(unsafe.Pointer(cdata))
-	return int(C.mpv_set_property_string(m.handle, cname, cdata))
+	return NewError(C.mpv_set_property_string(m.handle, cname, cdata))
 }
 
 func (m *Mpv) SetPropertyAsync(name string, replyUserdata uint64, format Format, data interface{}) error {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 	ptr := data2Ptr(format, data)
-	return NewMpvError(C.mpv_set_property_async(m.handle,C.uint64_t(replyUserdata),cname,C.mpv_format(format),ptr))
+	return NewError(C.mpv_set_property_async(m.handle, C.uint64_t(replyUserdata), cname, C.mpv_format(format), ptr))
 }
 
 func (m *Mpv) GetProperty(name string, format Format) (interface{}, error) {
-	//int mpv_get_property(mpv_handle *ctx, const char *name, mpv_format format, void *data);
-	//TODO
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
-	var data unsafe.Pointer
 
-	err := NewMpvError(C.mpv_get_property(m.handle,cname,C.mpv_format(format),data))
-
-	return nil, err
+	switch format {
+	case FORMAT_STRING, FORMAT_OSD_STRING:
+		{
+			var cval *C.char
+			err := NewError(C.mpv_get_property(m.handle, cname, C.mpv_format(format), unsafe.Pointer(&cval)))
+			if err != 0 {
+				return nil, err
+			}
+			defer C.mpv_free(unsafe.Pointer(cval))
+			return C.GoString(cval), nil
+		}
+	case FORMAT_INT64:
+		{
+			var cval C.int64_t
+			err := NewError(C.mpv_get_property(m.handle, cname, C.mpv_format(format), unsafe.Pointer(&cval)))
+			if err != 0 {
+				return nil, err
+			}
+			return int64(cval), nil
+		}
+	case FORMAT_DOUBLE:
+		{
+			var cval C.double
+			err := NewError(C.mpv_get_property(m.handle, cname, C.mpv_format(format), unsafe.Pointer(&cval)))
+			if err != 0 {
+				return nil, err
+			}
+			return float64(cval), nil
+		}
+	case FORMAT_FLAG:
+		{
+			var cval C.int
+			err := NewError(C.mpv_get_property(m.handle, cname, C.mpv_format(format), unsafe.Pointer(&cval)))
+			if err != 0 {
+				return nil, err
+			}
+			return cval == 1, nil
+		}
+	case FORMAT_NODE, FORMAT_NODE_ARRAY, FORMAT_NODE_MAP, FORMAT_NONE:
+		{
+			//TODO
+			panic("Not supported property")
+		}
+	default:
+		panic("Not supported format")
+	}
 }
 
 func (m *Mpv) GetPropertyString(name string) string {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
-	return C.GoString(C.mpv_get_property_string(m.handle, cname))
+
+	cstr := C.mpv_get_property_string(m.handle, cname)
+	if cstr != nil {
+		str := C.GoString(cstr)
+		C.mpv_free(unsafe.Pointer(cstr))
+		return str
+	}
+
+	return ""
 }
 
 func (m *Mpv) GetPropertyOsdString(name string) string {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
-	return C.GoString(C.mpv_get_property_osd_string(m.handle, cname))
+	cstr := C.mpv_get_property_osd_string(m.handle, cname)
+	if cstr != nil {
+		str := C.GoString(cstr)
+		C.mpv_free(unsafe.Pointer(cstr))
+		return str
+	}
+
+	return ""
 }
 
-func (m *Mpv) GetPropertyAsync(name string, format Format) (interface{}, int) {
-	//int mpv_get_property_async(mpv_handle *ctx, uint64_t reply_userdata, const char *name, mpv_format format);
-	//TODO
-	return nil, -1
-}
-
-func (m *Mpv) ObserveProperty(replyUserdata uint64, name string, format Format) int {
+func (m *Mpv) GetPropertyAsync(name string, replyUserdata uint64, format Format) error {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
-	return int(C.mpv_observe_property(m.handle, C.uint64_t(replyUserdata), cname, C.mpv_format(format)))
+
+	return NewError(C.mpv_get_property_async(m.handle, C.uint64_t(replyUserdata), cname, C.mpv_format(format)))
 }
 
-func (m *Mpv) UnObserveProperty(registeredReplyUserdata uint64) int {
-	return int(C.mpv_unobserve_property(m.handle, C.uint64_t(registeredReplyUserdata)))
+func (m *Mpv) ObserveProperty(replyUserdata uint64, name string, format Format) error {
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
+	return NewError(C.mpv_observe_property(m.handle, C.uint64_t(replyUserdata), cname, C.mpv_format(format)))
 }
 
-func (m *Mpv) RequestEvent(event EventId, enable bool) int {
+func (m *Mpv) UnObserveProperty(registeredReplyUserdata uint64) error {
+	return NewError(C.mpv_unobserve_property(m.handle, C.uint64_t(registeredReplyUserdata)))
+}
+
+func (m *Mpv) RequestEvent(event EventId, enable bool) error {
 	var en C.int = 0
 	if enable {
 		en = 1
 	}
-	return int(C.mpv_request_event(m.handle, C.mpv_event_id(event), en))
+	return NewError(C.mpv_request_event(m.handle, C.mpv_event_id(event), en))
 }
 
-func (m *Mpv) RequestLogMessages(minLevel string) int {
+func (m *Mpv) RequestLogMessages(minLevel string) error {
 	clevel := C.CString(minLevel)
 	defer C.free(unsafe.Pointer(clevel))
-	return int(C.mpv_request_log_messages(m.handle, clevel))
+	return NewError(C.mpv_request_log_messages(m.handle, clevel))
 }
 
-func (m *Mpv) WaitEvent(timeout float32) /*Event*/ {
-	//TODO
-	//mpv_event *mpv_wait_event(mpv_handle *ctx, double timeout);
+func (m *Mpv) WaitEvent(timeout float32) *Event {
+	var cevent *C.mpv_event
+	cevent = C.mpv_wait_event(m.handle, C.double(timeout))
+	if cevent == nil {
+		return nil
+	}
+
+	e := &Event{}
+
+	e.Event_Id = EventId(cevent.event_id)
+	e.Reply_Userdata = uint64(cevent.reply_userdata)
+	e.Error = NewError(cevent.error)
+	e.Data = cevent.data
+	return e
 }
 
 func (m *Mpv) Wakeup() {
@@ -230,6 +296,7 @@ func (m *Mpv) SetWakeupCallback(callback func(d interface{}), d interface{}) {
 	callbackVar = d*/
 	//	C.mpv_set_wakeup_callback(m.handle,,unsafe.Pointer(d))
 	//TODO void mpv_set_wakeup_callback(mpv_handle *ctx, void (*cb)(void *d), void *d);
+	panic("Not supported mpv_set_wakeup_callback")
 }
 
 func (m *Mpv) GetWakeupPipe() int {
@@ -245,8 +312,6 @@ func (m *Mpv) GetSubApi(api SubApi) unsafe.Pointer {
 }
 
 /*
-
-void mpv_free(void *data);
 void mpv_free_node_contents(mpv_node *node);
 */
 
@@ -261,7 +326,11 @@ func data2Ptr(format Format, data interface{}) unsafe.Pointer {
 		}
 	case FORMAT_INT64:
 		{
-			val := C.int64_t(data.(int64))
+			i, ok := data.(int64)
+			if !ok {
+				i = int64(data.(int))
+			}
+			val := C.int64_t(i)
 			ptr = unsafe.Pointer(&val)
 		}
 	case FORMAT_DOUBLE:
@@ -287,32 +356,23 @@ func data2Ptr(format Format, data interface{}) unsafe.Pointer {
 }
 
 func ptr2Data(format Format, data unsafe.Pointer) interface{} {
-	var ptr unsafe.Pointer = nil
+	var ret interface{}
 	switch format {
 	case FORMAT_STRING, FORMAT_OSD_STRING:
 		{
-
-			val := C.CString(data.(string))
-			ptr = unsafe.Pointer(&val)
-			defer C.free(unsafe.Pointer(val))
+			ret = C.GoString((*C.char)(data))
 		}
 	case FORMAT_INT64:
 		{
-			val := C.int64_t(data.(int64))
-			ptr = unsafe.Pointer(&val)
+			ret = int64(uintptr(data))
 		}
 	case FORMAT_DOUBLE:
 		{
-			val := C.double(data.(float32))
-			ptr = unsafe.Pointer(&val)
+			ret = float32(uintptr(data))
 		}
 	case FORMAT_FLAG:
 		{
-			val := C.int(0)
-			if data.(bool) {
-				val = 1
-			}
-			ptr = unsafe.Pointer(&val)
+			ret = uintptr(data) == 1
 		}
 	case FORMAT_NODE, FORMAT_NODE_ARRAY, FORMAT_NODE_MAP, FORMAT_NONE:
 		{
@@ -320,5 +380,12 @@ func ptr2Data(format Format, data unsafe.Pointer) interface{} {
 			panic("Not supported property")
 		}
 	}
-	return ptr
+	return ret
+}
+
+type Event struct {
+	Event_Id       EventId
+	Error          error
+	Reply_Userdata uint64
+	Data           unsafe.Pointer
 }

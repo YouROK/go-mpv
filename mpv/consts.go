@@ -11,7 +11,7 @@ const (
 	 * return positive values, which also indicate success. API users can
 	 * hardcode the fact that ">= 0" means success.
 	 */
-	ERROR_SUCCESS = C.MPV_ERROR_SUCCESS
+	ERROR_SUCCESS Error = C.MPV_ERROR_SUCCESS
 	/**
 	 * The event ringbuffer is full. This means the client is choked, and can't
 	 * receive any events. This can happen when too many asynchronous requests
@@ -20,88 +20,88 @@ const (
 	 * making asynchronous requests. (Bugs in the client API implementation
 	 * could also trigger this, e.g. if events become "lost".)
 	 */
-	ERROR_EVENT_QUEUE_FULL = C.MPV_ERROR_EVENT_QUEUE_FULL
+	ERROR_EVENT_QUEUE_FULL Error = C.MPV_ERROR_EVENT_QUEUE_FULL
 	/**
 	 * Memory allocation failed.
 	 */
-	ERROR_NOMEM = C.MPV_ERROR_NOMEM
+	ERROR_NOMEM Error = C.MPV_ERROR_NOMEM
 	/**
 	 * The mpv core wasn't configured and initialized yet. See the notes in
 	 * mpv_create().
 	 */
-	ERROR_UNINITIALIZED = C.MPV_ERROR_UNINITIALIZED
+	ERROR_UNINITIALIZED Error = C.MPV_ERROR_UNINITIALIZED
 	/**
 	 * Generic catch-all error if a parameter is set to an invalid or
 	 * unsupported value. This is used if there is no better error code.
 	 */
-	ERROR_INVALID_PARAMETER = C.MPV_ERROR_INVALID_PARAMETER
+	ERROR_INVALID_PARAMETER Error = C.MPV_ERROR_INVALID_PARAMETER
 	/**
 	 * Trying to set an option that doesn't exist.
 	 */
-	ERROR_OPTION_NOT_FOUND = C.MPV_ERROR_OPTION_NOT_FOUND
+	ERROR_OPTION_NOT_FOUND Error = C.MPV_ERROR_OPTION_NOT_FOUND
 	/**
 	 * Trying to set an option using an unsupported MPV_FORMAT.
 	 */
-	ERROR_OPTION_FORMAT = C.MPV_ERROR_OPTION_FORMAT
+	ERROR_OPTION_FORMAT Error = C.MPV_ERROR_OPTION_FORMAT
 	/**
 	 * Setting the option failed. Typically this happens if the provided option
 	 * value could not be parsed.
 	 */
-	ERROR_OPTION_ERROR = C.MPV_ERROR_OPTION_ERROR
+	ERROR_OPTION_ERROR Error = C.MPV_ERROR_OPTION_ERROR
 	/**
 	 * The accessed property doesn't exist.
 	 */
-	ERROR_PROPERTY_NOT_FOUND = C.MPV_ERROR_PROPERTY_NOT_FOUND
+	ERROR_PROPERTY_NOT_FOUND Error = C.MPV_ERROR_PROPERTY_NOT_FOUND
 	/**
 	 * Trying to set or get a property using an unsupported MPV_FORMAT.
 	 */
-	ERROR_PROPERTY_FORMAT = C.MPV_ERROR_PROPERTY_FORMAT
+	ERROR_PROPERTY_FORMAT Error = C.MPV_ERROR_PROPERTY_FORMAT
 	/**
 	 * The property exists, but is not available. This usually happens when the
 	 * associated subsystem is not active, e.g. querying audio parameters while
 	 * audio is disabled.
 	 */
-	ERROR_PROPERTY_UNAVAILABLE = C.MPV_ERROR_PROPERTY_UNAVAILABLE
+	ERROR_PROPERTY_UNAVAILABLE Error = C.MPV_ERROR_PROPERTY_UNAVAILABLE
 	/**
 	 * Error setting or getting a property.
 	 */
-	ERROR_PROPERTY_ERROR = C.MPV_ERROR_PROPERTY_ERROR
+	ERROR_PROPERTY_ERROR Error = C.MPV_ERROR_PROPERTY_ERROR
 	/**
 	 * General error when running a command with mpv_command and similar.
 	 */
-	ERROR_COMMAND = C.MPV_ERROR_COMMAND
+	ERROR_COMMAND Error = C.MPV_ERROR_COMMAND
 	/**
 	 * Generic error on loading (used with mpv_event_end_file.error).
 	 */
-	ERROR_LOADING_FAILED = C.MPV_ERROR_LOADING_FAILED
+	ERROR_LOADING_FAILED Error = C.MPV_ERROR_LOADING_FAILED
 	/**
 	 * Initializing the audio output failed.
 	 */
-	ERROR_AO_INIT_FAILED = C.MPV_ERROR_AO_INIT_FAILED
+	ERROR_AO_INIT_FAILED Error = C.MPV_ERROR_AO_INIT_FAILED
 	/**
 	 * Initializing the video output failed.
 	 */
-	ERROR_VO_INIT_FAILED = C.MPV_ERROR_VO_INIT_FAILED
+	ERROR_VO_INIT_FAILED Error = C.MPV_ERROR_VO_INIT_FAILED
 	/**
 	 * There was no audio or video data to play. This also happens if the
 	 * file was recognized, but did not contain any audio or video streams,
 	 * or no streams were selected.
 	 */
-	ERROR_NOTHING_TO_PLAY = C.MPV_ERROR_NOTHING_TO_PLAY
+	ERROR_NOTHING_TO_PLAY Error = C.MPV_ERROR_NOTHING_TO_PLAY
 	/**
 	 * When trying to load the file, the file format could not be determined,
 	 * or the file was too broken to open it.
 	 */
-	ERROR_UNKNOWN_FORMAT = C.MPV_ERROR_UNKNOWN_FORMAT
+	ERROR_UNKNOWN_FORMAT Error = C.MPV_ERROR_UNKNOWN_FORMAT
 	/**
 	 * Generic error for signaling that certain system requirements are not
 	 * fulfilled.
 	 */
-	ERROR_UNSUPPORTED = C.MPV_ERROR_UNSUPPORTED
+	ERROR_UNSUPPORTED Error = C.MPV_ERROR_UNSUPPORTED
 	/**
 	 * The API function which was called is a stub only.
 	 */
-	MPV_ERROR_NOT_IMPLEMENTED = C.MPV_ERROR_UNSUPPORTED
+	MPV_ERROR_NOT_IMPLEMENTED Error = C.MPV_ERROR_UNSUPPORTED
 )
 
 type Format int
@@ -418,6 +418,112 @@ const (
 	EVENT_QUEUE_OVERFLOW EventId = C.MPV_EVENT_QUEUE_OVERFLOW
 	// Internal note: adjust INTERNAL_EVENT_BASE when adding new events.
 )
+
+func (eid EventId) String() string {
+	switch eid {
+	case EVENT_NONE:
+		{
+			return "EVENT_NONE"
+		}
+	case EVENT_SHUTDOWN:
+		{
+			return "EVENT_SHUTDOWN"
+		}
+	case EVENT_LOG_MESSAGE:
+		{
+			return "EVENT_LOG_MESSAGE"
+		}
+	case EVENT_GET_PROPERTY_REPLY:
+		{
+			return "EVENT_GET_PROPERTY_REPLY"
+		}
+	case EVENT_SET_PROPERTY_REPLY:
+		{
+			return "EVENT_SET_PROPERTY_REPLY"
+		}
+	case EVENT_COMMAND_REPLY:
+		{
+			return "EVENT_COMMAND_REPLY"
+		}
+	case EVENT_START_FILE:
+		{
+			return "EVENT_START_FILE"
+		}
+	case EVENT_END_FILE:
+		{
+			return "EVENT_END_FILE"
+		}
+	case EVENT_FILE_LOADED:
+		{
+			return "EVENT_FILE_LOADED"
+		}
+	case EVENT_TRACKS_CHANGED:
+		{
+			return "EVENT_TRACKS_CHANGED"
+		}
+	case EVENT_TRACK_SWITCHED:
+		{
+			return "EVENT_TRACK_SWITCHED"
+		}
+	case EVENT_IDLE:
+		{
+			return "EVENT_IDLE"
+		}
+	case EVENT_PAUSE:
+		{
+			return "EVENT_PAUSE"
+		}
+	case EVENT_UNPAUSE:
+		{
+			return "EVENT_UNPAUSE"
+		}
+	case EVENT_TICK:
+		{
+			return "EVENT_TICK"
+		}
+	case EVENT_SCRIPT_INPUT_DISPATCH:
+		{
+			return "EVENT_SCRIPT_INPUT_DISPATCH"
+		}
+	case EVENT_CLIENT_MESSAGE:
+		{
+			return "EVENT_CLIENT_MESSAGE"
+		}
+	case EVENT_VIDEO_RECONFIG:
+		{
+			return "EVENT_VIDEO_RECONFIG"
+		}
+	case EVENT_AUDIO_RECONFIG:
+		{
+			return "EVENT_AUDIO_RECONFIG"
+		}
+	case EVENT_METADATA_UPDATE:
+		{
+			return "EVENT_METADATA_UPDATE"
+		}
+	case EVENT_SEEK:
+		{
+			return "EVENT_SEEK"
+		}
+	case EVENT_PLAYBACK_RESTART:
+		{
+			return "EVENT_PLAYBACK_RESTART"
+		}
+	case EVENT_PROPERTY_CHANGE:
+		{
+			return "EVENT_PROPERTY_CHANGE"
+		}
+	case EVENT_CHAPTER_CHANGE:
+		{
+			return "EVENT_CHAPTER_CHANGE"
+		}
+	case EVENT_QUEUE_OVERFLOW:
+		{
+			return "EVENT_QUEUE_OVERFLOW"
+		}
+	}
+	return "UNKNOWN_EVENT"
+}
 
 //Log level  mpv_log_level
 const (
