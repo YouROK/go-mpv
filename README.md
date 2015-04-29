@@ -1,6 +1,6 @@
 # GO-MPV
 
-Bindings for libmpv and golang
+Golang bindings for libmpv
 
 ## Node not implemented
 
