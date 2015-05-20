@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/YouROK/go-mpv/mpv"
+	"github.com/yourok/go-mpv/mpv"
 )
 
 func eventListener(m *mpv.Mpv) chan *mpv.Event {
@@ -36,7 +36,7 @@ func main() {
 	m.SetOption("cache-seek-min", mpv.FORMAT_INT64, 16) // 1 second
 
 	err := m.Initialize()
-	if err != mpv.ERROR_SUCCESS {
+	if err != nil {
 		log.Println("Mpv init:", err.Error())
 		return
 	}
