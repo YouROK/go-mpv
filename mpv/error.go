@@ -10,7 +10,10 @@ import (
 type Error int
 
 //const char *mpv_error_string(int error);
-func NewError(errcode C.int) Error {
+func NewError(errcode C.int) error {
+	if errcode == C.MPV_ERROR_SUCCESS {
+		return nil
+	}
 	return Error(errcode)
 }
 
