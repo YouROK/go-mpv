@@ -170,7 +170,7 @@ func (m *Mpv) GetProperty(name string, format Format) (interface{}, error) {
 		{
 			var cval *C.char
 			err := NewError(C.mpv_get_property(m.handle, cname, C.mpv_format(format), unsafe.Pointer(&cval)))
-			if err != 0 {
+			if err != nil {
 				return nil, err
 			}
 			defer C.mpv_free(unsafe.Pointer(cval))
@@ -180,7 +180,7 @@ func (m *Mpv) GetProperty(name string, format Format) (interface{}, error) {
 		{
 			var cval C.int64_t
 			err := NewError(C.mpv_get_property(m.handle, cname, C.mpv_format(format), unsafe.Pointer(&cval)))
-			if err != 0 {
+			if err != nil {
 				return nil, err
 			}
 			return int64(cval), nil
@@ -189,7 +189,7 @@ func (m *Mpv) GetProperty(name string, format Format) (interface{}, error) {
 		{
 			var cval C.double
 			err := NewError(C.mpv_get_property(m.handle, cname, C.mpv_format(format), unsafe.Pointer(&cval)))
-			if err != 0 {
+			if err != nil {
 				return nil, err
 			}
 			return float64(cval), nil
@@ -198,7 +198,7 @@ func (m *Mpv) GetProperty(name string, format Format) (interface{}, error) {
 		{
 			var cval C.int
 			err := NewError(C.mpv_get_property(m.handle, cname, C.mpv_format(format), unsafe.Pointer(&cval)))
-			if err != 0 {
+			if err != nil {
 				return nil, err
 			}
 			return cval == 1, nil
