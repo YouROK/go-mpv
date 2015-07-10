@@ -15,6 +15,7 @@ void setArrayString1(char** a, int i, char* s) {
 
 */
 import "C"
+
 import (
 	"unsafe"
 )
@@ -204,10 +205,40 @@ func (m *Mpv) GetProperty(name string, format Format) (interface{}, error) {
 			}
 			return cval == 1, nil
 		}
-	case FORMAT_NODE, FORMAT_NODE_ARRAY, FORMAT_NODE_MAP, FORMAT_NONE:
+	case FORMAT_NONE:
 		{
-			//TODO
-			panic("Not supported property")
+			err := NewError(C.mpv_get_property(m.handle, cname, C.mpv_format(format), nil))
+			if err != nil {
+				return nil, err
+			}
+			return nil, nil
+		}
+	case FORMAT_NODE:
+		{
+			var cval C.mpv_node
+			err := NewError(C.mpv_get_property(m.handle, cname, C.mpv_format(format), unsafe.Pointer(&cval)))
+			if err != nil {
+				return nil, err
+			}
+			return GetNode(&cval)
+		}
+	case FORMAT_NODE_ARRAY:
+		{
+			var cval C.mpv_node_list
+			err := NewError(C.mpv_get_property(m.handle, cname, C.mpv_format(format), unsafe.Pointer(&cval)))
+			if err != nil {
+				return nil, err
+			}
+			return GetNodeList(&cval)
+		}
+	case FORMAT_NODE_MAP:
+		{
+			var cval C.mpv_node_list
+			err := NewError(C.mpv_get_property(m.handle, cname, C.mpv_format(format), unsafe.Pointer(&cval)))
+			if err != nil {
+				return nil, err
+			}
+			return GetNodeMap(cval)
 		}
 	default:
 		panic("Not supported format")
@@ -321,18 +352,12 @@ func (m *Mpv) GetSubApiGL() *MpvGL {
 	return mgl
 }
 
-/*
-void mpv_free_node_contents(mpv_node *node);
-*/
-
 func data2Ptr(format Format, data interface{}) unsafe.Pointer {
 	var ptr unsafe.Pointer = nil
 	switch format {
 	case FORMAT_STRING, FORMAT_OSD_STRING:
 		{
-			val := C.CString(data.(string))
-			ptr = unsafe.Pointer(&val)
-			defer C.free(unsafe.Pointer(val))
+			ptr = unsafe.Pointer(&[]byte(data.(string))[0])
 		}
 	case FORMAT_INT64:
 		{
@@ -345,7 +370,7 @@ func data2Ptr(format Format, data interface{}) unsafe.Pointer {
 		}
 	case FORMAT_DOUBLE:
 		{
-			val := C.double(data.(float32))
+			val := C.double(data.(float64))
 			ptr = unsafe.Pointer(&val)
 		}
 	case FORMAT_FLAG:
@@ -356,41 +381,24 @@ func data2Ptr(format Format, data interface{}) unsafe.Pointer {
 			}
 			ptr = unsafe.Pointer(&val)
 		}
-	case FORMAT_NODE, FORMAT_NODE_ARRAY, FORMAT_NODE_MAP, FORMAT_NONE:
+	case FORMAT_NONE:
 		{
-			//TODO
-			panic("Not supported property")
+			return nil
+		}
+
+	case FORMAT_NODE:
+		{
+			val := (data.(*Node))
+			cnode := val.GetCNode()
+			ptr = unsafe.Pointer(cnode)
+		}
+
+	case FORMAT_NODE_ARRAY, FORMAT_NODE_MAP:
+		{
+			return nil
 		}
 	}
 	return ptr
-}
-
-func ptr2Data(format Format, data unsafe.Pointer) interface{} {
-	var ret interface{}
-	switch format {
-	case FORMAT_STRING, FORMAT_OSD_STRING:
-		{
-			ret = C.GoString((*C.char)(data))
-		}
-	case FORMAT_INT64:
-		{
-			ret = int64(uintptr(data))
-		}
-	case FORMAT_DOUBLE:
-		{
-			ret = float32(uintptr(data))
-		}
-	case FORMAT_FLAG:
-		{
-			ret = uintptr(data) == 1
-		}
-	case FORMAT_NODE, FORMAT_NODE_ARRAY, FORMAT_NODE_MAP, FORMAT_NONE:
-		{
-			//TODO
-			panic("Not supported property")
-		}
-	}
-	return ret
 }
 
 type Event struct {

@@ -27,8 +27,8 @@ func getProcAddr(fn_ctx unsafe.Pointer, name *C.char) unsafe.Pointer {
 	return nil
 }
 
-func (mgl *MpvGL) InitGL(GetProcAddr get_proc_addr) error {
-	callback_get_proc_address_fn = GetProcAddr
+func (mgl *MpvGL) InitGL() error {
+	callback_get_proc_address_fn = getProcAddress
 	return NewError(C.mpv_opengl_cb_init_gl(mgl.ctx,
 		nil,
 		(*[0]byte)(C.getProcAddr),

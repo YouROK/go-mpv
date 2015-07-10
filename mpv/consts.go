@@ -226,7 +226,7 @@ const (
 	 * some very special situations. (Currently, only for the screenshot_raw
 	 * command.)
 	 */
-//	FORMAT_BYTE_ARRAY = C.MPV_FORMAT_BYTE_ARRAY
+	FORMAT_BYTE_ARRAY = C.MPV_FORMAT_BYTE_ARRAY
 )
 
 type EventId int
