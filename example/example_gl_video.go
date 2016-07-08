@@ -44,8 +44,8 @@ func main() {
 	m.SetOptionString("hwdec", "auto")
 
 	//cache
-	m.SetOption("cache-default", mpv.FORMAT_INT64, 160) // 10 seconds
-	m.SetOption("cache-seek-min", mpv.FORMAT_INT64, 16) // 1 second
+	m.SetOption("cache-default", mpv.FORMAT_INT64, 160)
+	m.SetOption("cache-seek-min", mpv.FORMAT_INT64, 16)
 
 	//GL
 	m.SetOptionString("vo", "opengl-cb")
