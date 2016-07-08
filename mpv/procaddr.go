@@ -16,7 +16,7 @@ package mpv
 #if defined(TAG_EGL)
 	#include <stdlib.h>
 	#include <EGL/egl.h>
-	void* GlowGetProcAddress1(const char* name) {
+	void* glGetProcAddress(const char* name) {
 		return eglGetProcAddress(name);
 	}
 #elif defined(TAG_WINDOWS)
@@ -24,7 +24,7 @@ package mpv
 	#include <windows.h>
 	#include <stdlib.h>
 	static HMODULE ogl32dll = NULL;
-	void* GlowGetProcAddress1(const char* name) {
+	void* glGetProcAddress(const char* name) {
 		void* pf = wglGetProcAddress((LPCSTR) name);
 		if (pf) {
 			return pf;
@@ -37,13 +37,13 @@ package mpv
 #elif defined(TAG_DARWIN)
 	#include <stdlib.h>
 	#include <dlfcn.h>
-	void* GlowGetProcAddress1(const char* name) {
+	void* glGetProcAddress(const char* name) {
 		return dlsym(RTLD_DEFAULT, name);
 	}
 #elif defined(TAG_LINUX)
 	#include <stdlib.h>
 	#include <GL/glx.h>
-	void* GlowGetProcAddress1(const char* name) {
+	void* glGetProcAddress(const char* name) {
 		return glXGetProcAddress(name);
 	}
 #endif
@@ -54,5 +54,5 @@ import "unsafe"
 func getProcAddress(namea string) unsafe.Pointer {
 	cname := C.CString(namea)
 	defer C.free(unsafe.Pointer(cname))
-	return C.GlowGetProcAddress1(cname)
+	return C.glGetProcAddress(cname)
 }
