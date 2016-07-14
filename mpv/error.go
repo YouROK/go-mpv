@@ -18,5 +18,5 @@ func NewError(errcode C.int) error {
 }
 
 func (m Error) Error() string {
-	return fmt.Sprintln("MPV_ERROR", int(m), C.GoString(C.mpv_error_string(C.int(m))))
+	return fmt.Sprintln(int(m), C.GoString(C.mpv_error_string(C.int(m))))
 }
