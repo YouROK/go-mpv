@@ -27,7 +27,11 @@ type Mpv struct {
 }
 
 func Create() *Mpv {
-	return &Mpv{C.mpv_create(), nil, nil}
+	ctx := C.mpv_create()
+	if ctx == nil {
+		return nil
+	}
+	return &Mpv{ctx, nil, nil}
 }
 
 func (m *Mpv) ClientName() string {
@@ -315,7 +319,15 @@ func (m *Mpv) WaitEvent(timeout float32) *Event {
 	e.Event_Id = EventId(cevent.event_id)
 	e.Reply_Userdata = uint64(cevent.reply_userdata)
 	e.Error = NewError(cevent.error)
-	e.Data = cevent.data
+	if e.Event_Id == EVENT_END_FILE {
+		var eef *C.mpv_event_end_file = (*C.struct_mpv_event_end_file)(cevent.data)
+		efr := EventEndFile{}
+		efr.Reason = EndFileReason(eef.reason)
+		efr.ErrCode = Error(eef.error)
+		e.Data = efr
+	} else {
+		e.Data = cevent.data
+	}
 	return e
 }
 
@@ -405,5 +417,10 @@ type Event struct {
 	Event_Id       EventId
 	Error          error
 	Reply_Userdata uint64
-	Data           unsafe.Pointer
+	Data           interface{}
+}
+
+type EventEndFile struct {
+	Reason  EndFileReason
+	ErrCode Error
 }

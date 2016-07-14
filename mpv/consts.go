@@ -231,7 +231,7 @@ const (
 
 type EventId int
 
-//Event_Id  mpv_event_id
+//EventId  mpv_event_id
 const (
 	/**
 	 * Nothing happened. Happens on timeouts or sporadic wakeups.
@@ -537,7 +537,9 @@ const (
 	LOG_LEVEL_TRACE = C.MPV_LOG_LEVEL_TRACE /// "trace" - extremely noisy
 )
 
-//End file reason  mpv_end_file_reason
+type EndFileReason int
+
+//EndFileReason mpv_end_file_reason
 const (
 	/**
 	 * The end of file was reached. Sometimes this may also happen on
@@ -545,24 +547,50 @@ const (
 	 * interrupted when playing a remote file. It also happens if the
 	 * playback range was restricted with --end or --frames or similar.
 	 */
-	END_FILE_REASON_EOF = C.MPV_END_FILE_REASON_EOF
+	END_FILE_REASON_EOF EndFileReason = C.MPV_END_FILE_REASON_EOF
 	/**
 	 * Playback was stopped by an external action (e.g. playlist controls).
 	 */
-	END_FILE_REASON_STOP = C.MPV_END_FILE_REASON_STOP
+	END_FILE_REASON_STOP EndFileReason = C.MPV_END_FILE_REASON_STOP
 	/**
 	 * Playback was stopped by the quit command or player shutdown.
 	 */
-	END_FILE_REASON_QUIT = C.MPV_END_FILE_REASON_QUIT
+	END_FILE_REASON_QUIT EndFileReason = C.MPV_END_FILE_REASON_QUIT
 	/**
 	 * Some kind of error happened that lead to playback abort. Does not
 	 * necessarily happen on incomplete or broken files (in these cases, both
-	 * END_FILE_REASON_ERROR = C.MPV_END_FILE_REASON_ERROR
+	 * MPV_END_FILE_REASON_ERROR or MPV_END_FILE_REASON_EOF are possible).
 	 *
 	 * mpv_event_end_file.error will be set.
 	 */
-	END_FILE_REASON_ERROR = C.MPV_END_FILE_REASON_ERROR
+	END_FILE_REASON_ERROR EndFileReason = C.MPV_END_FILE_REASON_ERROR
+	/**
+	 * The file was a playlist or similar. When the playlist is read, its
+	 * entries will be appended to the playlist after the entry of the current
+	 * file, the entry of the current file is removed, and a MPV_EVENT_END_FILE
+	 * event is sent with reason set to MPV_END_FILE_REASON_REDIRECT. Then
+	 * playback continues with the playlist contents.
+	 * Since API version 1.18.
+	 */
+	END_FILE_REASON_REDIRECT EndFileReason = C.MPV_END_FILE_REASON_REDIRECT
 )
+
+func (efr EndFileReason) String() string {
+	switch efr {
+	case END_FILE_REASON_EOF:
+		return "END_FILE_REASON_EOF"
+	case END_FILE_REASON_STOP:
+		return "END_FILE_REASON_STOP"
+	case END_FILE_REASON_QUIT:
+		return "END_FILE_REASON_QUIT"
+	case END_FILE_REASON_ERROR:
+		return "END_FILE_REASON_ERROR"
+	case END_FILE_REASON_REDIRECT:
+		return "END_FILE_REASON_REDIRECT"
+	default:
+		return "END_FILE_REASON_UNKNOWN"
+	}
+}
 
 type SubApi int
 
