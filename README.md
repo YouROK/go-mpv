@@ -8,3 +8,4 @@ Golang bindings for libmpv
 # Examples
  - https://github.com/aykevl93/plaincast
  - https://github.com/dz0ny/champ#usage-spinwheel
+ - https://github.com/YouROK/SRadio
