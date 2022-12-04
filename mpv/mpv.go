@@ -2,7 +2,6 @@ package mpv
 
 /*
 #include <mpv/client.h>
-#include <mpv/opengl_cb.h>
 #include <stdlib.h>
 #cgo LDFLAGS: -lmpv
 
@@ -42,10 +41,6 @@ func (m *Mpv) Initialize() error {
 	return NewError(C.mpv_initialize(m.handle))
 }
 
-func (m *Mpv) DetachDestroy() {
-	C.mpv_detach_destroy(m.handle)
-}
-
 func (m *Mpv) TerminateDestroy() {
 	C.mpv_terminate_destroy(m.handle)
 }
@@ -64,14 +59,6 @@ func (m *Mpv) LoadConfigFile(fileName string) error {
 	cfn := C.CString(fileName)
 	defer C.free(unsafe.Pointer(cfn))
 	return NewError(C.mpv_load_config_file(m.handle, cfn))
-}
-
-func (m *Mpv) Suspend() {
-	C.mpv_suspend(m.handle)
-}
-
-func (m *Mpv) Resume() {
-	C.mpv_resume(m.handle)
 }
 
 func (m *Mpv) GetTimeUS() int64 {
@@ -349,19 +336,6 @@ func (m *Mpv) GetWakeupPipe() int {
 
 func (m *Mpv) WaitAsyncRequests() {
 	C.mpv_wait_async_requests(m.handle)
-}
-
-func (m *Mpv) GetSubApi(api SubApi) unsafe.Pointer {
-	return unsafe.Pointer(C.mpv_get_sub_api(m.handle, C.mpv_sub_api(api)))
-}
-
-func (m *Mpv) GetSubApiGL() *MpvGL {
-	mgl := &MpvGL{}
-	mgl.ctx = (*C.mpv_opengl_cb_context)(C.mpv_get_sub_api(m.handle, C.MPV_SUB_API_OPENGL_CB))
-	if mgl.ctx == nil {
-		return nil
-	}
-	return mgl
 }
 
 func data2Ptr(format Format, data interface{}) unsafe.Pointer {
